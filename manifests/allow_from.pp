@@ -94,18 +94,20 @@ define sshd::allow_from (
     # See: lib/augeasfacter/sssd_info.conf
     # See also: https://github.com/woodsbw/augeasfacter
     ###
+    # don't allow root in sssd.conf
+    $simpl_users = $users - ['root']
     # convert sssd domains from csv string to a puppet array
     $domains = $facts['sssd_domains'] ? {
         String[1] => $facts['sssd_domains'].regsubst(/ +/, '', 'G').split(','),
         default   =>  [],
     }
     $domains.each |$domain| {
-        if $users =~ Array[String,1] {
-            $csv = $users.join(',')
+        if $simpl_users =~ Array[String,1] {
+            $csv = $simpl_users.join(',')
             ::sssd::domain::append_array { "${name} users '${csv}' for sssd domain '${domain}'" :
                 domain  => $domain,
                 setting => 'simple_allow_users',
-                items   => $users,
+                items   => $simpl_users,
             }
         }
         if $groups =~ Array[String,1] {
